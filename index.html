@@ -4,6 +4,17 @@
     border: 1px solid #000;
     margin: 10px 5px 0 0;
   }
+
+  div {
+    margin-bottom: 10px;
+  }
+  div#border {
+    border: 2px solid red;
+  }
+  div#outline {
+    outline: 2px solid red;
+    outline-offset: -2px;
+  }
 </style>
 
 <div>
@@ -21,9 +32,13 @@
     исполнительного производства, указанного в постановлении в формате
     n..n/yy/dd/rr или n..n/yy/rr0dd-ИП .
   </p>
-</div> 
-<p class="name">Укажите номер ИП, для которого необходимо получить УИН</p>
-<input type="text" id="editbox" value="123456/06/24012-ИП" />
+</div>
+<div border="1px">
+  <p class="name">Укажите номер ИП, для которого необходимо получить УИН</p>
+  №ИП <input type="text" id="editboxIP" value="123456/06/24012-ИП" /> <> УИН
+  <input type="text" id="editboxUIN" value="32224012060123456005" />
+</div>
+
 <p class="name">
   Выберите файл с номерами ИП, для которых необходимо получить УИНы
 </p>
@@ -39,6 +54,8 @@
   // контрольный разряд уникального идентификатора начисления представляет собой остаток от деления полученной суммы на модуль 11 и должен иметь значение от 0 до 9;
   // если полученный остаток равен 10, проводится повторный расчет с применением второй последовательности весовых коэффициентов, являющейся результатом циклического сдвига исходной последовательности на два разряда влево (3, 4, 5, 6, 7, 8, 9, 10, 1, 2);
   // в случае если при повторном расчете остаток от деления вновь сохраняется равным 10, то значение контрольного разряда признается равным нулю ("0").
+  //===========================
+  // Получить контрольный разряд УИН
   function getControlSum(strUin, startVes) {
     var controlSum = 0;
     for (var i = 0; i < strUin.length; i++) {
@@ -52,6 +69,7 @@
   //===========================
   // Получить УИН по номеру
   function getUin(lninp) {
+    // Выделяем фрагменты номера ИП
     var aln = lninp.toUpperCase().trim().split('/');
     var ipno = '';
     var ipyr = '';
@@ -61,6 +79,7 @@
     if (aln.length > 1) ipyr = aln[1];
     if (aln.length > 2) ipdp1 = aln[2];
     if (aln.length > 3) ipdp2 = aln[3];
+    // Поддерживаются 2 формата номера ИП
     if (ipdp1.includes('-') && ipdp2 == '') {
       var aln2 = ipdp1.split('-');
       ipdp1 = aln2[0];
@@ -69,6 +88,7 @@
       ipdp1 = ipdp2 + '0' + ipdp1;
       ipdp2 = 'ИП';
     }
+    // Простейшая валидация элементов номера ИП
     var invalidIp =
       Number(ipno) < 1 ||
       Number(ipno) > 9999999 ||
@@ -76,6 +96,7 @@
       !(ipdp1.length == 5) ||
       !(ipdp2 == 'ИП');
     var uin = 'Неверно указан номер исполнительного производства '; //+ipno+' '+ipyr+' '+ipdp1+' '+ipdp2 ;
+    // Для валидного номера ИП рассчитываем УИН
     if (!invalidIp) {
       var uin19 = '322' + ipdp1 + ipyr + ('0000' + ipno).slice(-7) + '00';
       var crc = getControlSum(uin19, 1);
@@ -106,16 +127,15 @@
     var files = evt.target.files; // FileList object
     document.getElementById('list').innerHTML = '';
 
-    // Loop through the FileList and render image files as thumbnails.
+    // Обрабатываем каждый файл из списка FileList
     for (var i = 0, f; (f = files[i]); i++) {
-      // Only process non image files.
+      // Пропускаем файлы с картинками
       if (f.type.match('image.*')) {
         continue;
       }
 
+      // Замыкание для обработки содержания файла
       var reader = new FileReader();
-
-      // Closure to capture the file information.
       reader.onload = (function (theFile) {
         return function (e) {
           // file info
@@ -126,7 +146,6 @@
           arry.forEach((ln) => {
             spanText = spanText + '<br>' + ln + ' -> ' + getUin(ln);
           });
-
           // output
           var span = document.createElement('span');
           span.innerHTML = spanText;
@@ -134,13 +153,16 @@
         };
       })(f);
 
-      // Read in the image file as a data URL.
+      // Загрузка файла для обработки
       reader.readAsText(f);
     }
   }
 
+  // тело скрипта
+
+  // установка обработчиков событий
   document
-    .getElementById('editbox')
+    .getElementById('editboxIP')
     .addEventListener('input', handleInputBox, false);
   document
     .getElementById('files')
