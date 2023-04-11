@@ -1,1 +1,149 @@
-<div id="app"></div>
+<style>
+  .thumb {
+    height: 75px;
+    border: 1px solid #000;
+    margin: 10px 5px 0 0;
+  }
+</style>
+
+<div>
+  <p class="name">
+    Получить УИН ФССП России по номеру исполнительного производства
+  </p>
+  <p>
+    <a
+      href="https://fssp.gov.ru/files/fssp/db/files/00smev2022/trebovaniya_k_formirovaniu_uin_v4_20220620_20226271547.pdf"
+      >Требования к формированию уникального идентификатора начислений в
+      документах ФССП России, предназначенного для идентификации начисления</a
+    >, опубликованы на
+    <a href="https://fssp.gov.ru/mvv_fssp/">сайте ФССП России</a>. Согласно
+    данных требований для формирования УИН достаточно знания номера
+    исполнительного производства, указанного в постановлении в формате
+    n..n/yy/dd/rr или n..n/yy/rr0dd-ИП .
+  </p>
+</div>
+
+<p class="name">Укажите номер ИП, для которого необходимо получить УИН</p>
+<input type="text" id="editbox" value="123456/06/24012-ИП" />
+<p class="name">
+  Выберите файл с номерами ИП, для которых необходимо получить УИНы
+</p>
+<input type="file" id="files" name="files[]" multiple />
+<p class="name">Вычисленный результат:</p>
+<output id="list"></output>
+
+<script>
+  //===========================
+  // Контрольный разряд уникального идентификатора начисления рассчитывается в следующем порядке:
+  // каждому разряду уникального идентификатора начисления (первые 19 разрядов для 20-значного либо первые 24 разряда для 25-значного уникального идентификатора начисления), начиная со старшего разряда, присваивается весовой коэффициент, соответствующий повторяющемуся ряду чисел от 1 до 10;
+  // рассчитываются произведения значений разрядов на соответствующие весовые коэффициенты и вычисляется сумма полученных произведений;
+  // контрольный разряд уникального идентификатора начисления представляет собой остаток от деления полученной суммы на модуль 11 и должен иметь значение от 0 до 9;
+  // если полученный остаток равен 10, проводится повторный расчет с применением второй последовательности весовых коэффициентов, являющейся результатом циклического сдвига исходной последовательности на два разряда влево (3, 4, 5, 6, 7, 8, 9, 10, 1, 2);
+  // в случае если при повторном расчете остаток от деления вновь сохраняется равным 10, то значение контрольного разряда признается равным нулю ("0").
+  function getControlSum(strUin, startVes) {
+    var controlSum = 0;
+    for (var i = 0; i < strUin.length; i++) {
+      var ves = ((i + startVes - 1) % 10) + 1;
+      controlSum += Number(strUin[i]) * ves;
+      //spanText = spanText + '<br> ==> ' + strUin[i] + ' -> ' + ves;
+    }
+    return controlSum % 11;
+  }
+
+  //===========================
+  // Получить УИН по номеру
+  function getUin(lninp) {
+    var aln = lninp.toUpperCase().trim().split('/');
+    var ipno = '';
+    var ipyr = '';
+    var ipdp1 = '';
+    var ipdp2 = '';
+    if (aln.length > 0) ipno = aln[0];
+    if (aln.length > 1) ipyr = aln[1];
+    if (aln.length > 2) ipdp1 = aln[2];
+    if (aln.length > 3) ipdp2 = aln[3];
+    if (ipdp1.includes('-') && ipdp2 == '') {
+      var aln2 = ipdp1.split('-');
+      ipdp1 = aln2[0];
+      ipdp2 = aln2[1];
+    } else {
+      ipdp1 = ipdp2 + '0' + ipdp1;
+      ipdp2 = 'ИП';
+    }
+    var invalidIp =
+      Number(ipno) < 1 ||
+      Number(ipno) > 9999999 ||
+      !(ipyr.length == 2) ||
+      !(ipdp1.length == 5) ||
+      !(ipdp2 == 'ИП');
+    var uin = 'Неверно указан номер исполнительного производства '; //+ipno+' '+ipyr+' '+ipdp1+' '+ipdp2 ;
+    if (!invalidIp) {
+      var uin19 = '322' + ipdp1 + ipyr + ('0000' + ipno).slice(-7) + '00';
+      var crc = getControlSum(uin19, 1);
+      if (crc == 10) {
+        crc = getControlSum(uin19, 3);
+        if (crc == 10) {
+          crc = 0;
+        }
+      }
+      uin = uin19 + crc;
+    }
+    return uin;
+  }
+
+  //===========================
+  // Обработка поля ввода
+  function handleInputBox(evt) {
+    document.getElementById('list').innerHTML = '';
+    var ln = evt.target.value;
+    var span = document.createElement('span');
+    span.innerHTML = '<br>' + ln + ' -> ' + getUin(ln);
+    document.getElementById('list').insertBefore(span, null);
+  }
+
+  //===========================
+  // Обработка поля выбора файлов
+  function handleFileSelect(evt) {
+    var files = evt.target.files; // FileList object
+    document.getElementById('list').innerHTML = '';
+
+    // Loop through the FileList and render image files as thumbnails.
+    for (var i = 0, f; (f = files[i]); i++) {
+      // Only process non image files.
+      if (f.type.match('image.*')) {
+        continue;
+      }
+
+      var reader = new FileReader();
+
+      // Closure to capture the file information.
+      reader.onload = (function (theFile) {
+        return function (e) {
+          // file info
+          spanText = '<br>' + theFile.name + '; ';
+          // lines processing
+          var arry = e.target.result.split('\n');
+          spanText = spanText + arry.length + ' строк;';
+          arry.forEach((ln) => {
+            spanText = spanText + '<br>' + ln + ' -> ' + getUin(ln);
+          });
+
+          // output
+          var span = document.createElement('span');
+          span.innerHTML = spanText;
+          document.getElementById('list').insertBefore(span, null);
+        };
+      })(f);
+
+      // Read in the image file as a data URL.
+      reader.readAsText(f);
+    }
+  }
+
+  document
+    .getElementById('editbox')
+    .addEventListener('input', handleInputBox, false);
+  document
+    .getElementById('files')
+    .addEventListener('change', handleFileSelect, false);
+</script>
