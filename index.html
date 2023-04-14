@@ -39,11 +39,24 @@
   </p>
 </div>
 <div id="border">
-  <p class="name">Укажите номер ИП, для которого необходимо получить УИН</p>
+  <p class="name">Укажите номер ИП для получения УИН, или УИН для получения номера ИП</p>
   <label for="editboxIP">№ИП: </label>
-  <input type="text" id="editboxIP" value="123456/06/24012-ИП" placeholder="n..n/yy/rr0dd-ИП" /> <> 
+  <input
+    type="text"
+    id="editboxIP"
+    value="123456/06/24012-ИП"
+    placeholder="n..n/yy/rr0dd-ИП"
+  />
+  <>
   <label for="editboxUIN">УИН: </label>
-  <input type="tel" id="editboxUIN" value="32224012060123456005" placeholder="322....00 (20 цифр)" />
+  <input
+    type="text"
+    id="editboxUIN"
+    value="32224012060123456005"
+    placeholder="322....00 (20 цифр)"
+  />
+  <br><h5>
+  <label id="labelUINType"></label>
 </div>
 
 <div id="border">
@@ -135,25 +148,12 @@
   }
 
   //===========================
-  // Покрасить УИН
-  function colorUINInputBox(textfield_id) { /*
-    let uin = document.getElementById(textfield_id).innerHTML;
-    let r1 = "<em style='color:red;'>";
-    let r0 = '</em';
-    document.getElementById(textfield_id).innerHTML =
-      '' +
-      uin.substring(0, 3) +
-      r1 +
-      uin.substring(3, 8) +
-      r0 +
-      uin.substring(8, 10) +
-      r1 +
-      uin.substring(10, 17) +
-      r0 +
-      uin.substring(17, 20) +
-      r1 +
-      uin.substring(20) +
-      r0; */
+  // Отобразить тип УИН
+  function detectUINType() {
+    let uin = document.getElementById('editboxUIN').value;
+    let uinType = uin.substring(17, 19);
+    let uinid = uinTypeId.indexOf(uinType);
+    document.getElementById('labelUINType').innerHTML = '* Тип УИН: '+ uinTypeName[uinid];
   }
 
   //===========================
@@ -165,7 +165,7 @@
     span.innerHTML = '<br>' + ln + ' -> ' + getUin(ln);
     document.getElementById('list').insertBefore(span, null);
     document.getElementById('editboxUIN').value = getUin(ln);
-    colorUINInputBox('editboxUIN');
+    detectUINType('editboxUIN');
   }
   function handleInputBoxUIN(evt) {
     document.getElementById('list').innerHTML = '';
@@ -174,7 +174,7 @@
     span.innerHTML = '<br>' + ln + ' -> ' + getIP(ln);
     document.getElementById('list').insertBefore(span, null);
     document.getElementById('editboxIP').value = getIP(ln);
-    colorUINInputBox('editboxUIN');
+    detectUINType();
   }
 
   //===========================
@@ -215,6 +215,22 @@
   }
 
   // тело скрипта
+
+  // определяем массив видов начисление
+  const uinTypeId = ['00','01','02','03','04','05','06','07','08','09','10','11'];
+  const uinTypeName = [
+    'Взыскания по исполнительным производствам',
+    'Денежные взыскания Российской Федерации об административных правонарушениях, по делам, подведомственным ФССП России',
+    'Возмещение расходов по совершению исполнительских действий, осуществленных Федеральной службой судебных приставов за счет средств федерального бюджета (исполнительские действия в бюджет)','Прочие поступления от денежных взысканий (штрафов) и иных сумм в возмещение ущерба, зачисляемые в федеральный бюджет (материальный ущерб)',
+    'Исполнительский сбор',
+    'Денежные средства, поступающие от реализации конфискованного имущества/обращения в доход государства',
+    'Денежные взыскания (штрафы), установленные УК РФ (уголовные штрафы)',
+    'Доходы, поступающие в порядке возмещения федеральному бюджету средств, выплаченных на покрытие процессуальных издержек (процессуальные издержки)',
+    'Доходы, поступающие в порядке компенсации затрат на мероприятия, проводимые за счет бюджета (компенсация затрат)',
+    'Иные взыскания имущественного характера в пользу бюджетной системы РФ',
+    'Денежные взыскания, налагаемые судами (судебные штрафы)',
+    'Денежные взыскания (штрафы), установленные Кодексом Российской Федерации об административных правонарушениях, по делам, не подведомственным ФССП России'
+  ];
 
   // установка обработчиков событий
   document
