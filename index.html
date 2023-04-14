@@ -7,17 +7,22 @@
 
   div {
     margin-bottom: 10px;
+    padding-bottom: 10px;
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-top: 1px;
   }
   div#border {
-    border: 2px solid red;
+    border: 1px dotted red;
+    margin: 20px;
   }
   div#outline {
-    outline: 2px solid red;
+    outline: 1px solid red;
     outline-offset: -2px;
   }
 </style>
 
-<div>
+<div id="outline">
   <p class="name">
     Получить УИН ФССП России по номеру исполнительного производства
   </p>
@@ -33,7 +38,7 @@
     n..n/yy/dd/rr или n..n/yy/rr0dd-ИП .
   </p>
 </div>
-<div border="1px">
+<div id="border">
   <p class="name">Укажите номер ИП, для которого необходимо получить УИН</p>
   №ИП <input type="text" id="editboxIP" value="123456/06/24012-ИП" /> <> УИН
   <input type="text" id="editboxUIN" value="32224012060123456005" />
@@ -112,13 +117,36 @@
   }
 
   //===========================
+  // Получить номер ИП по УИН
+  function getIP(lninp) {
+    // Выделяем фрагменты номера ИП
+    ip =
+      lninp.substring(10, 17).replace(/^0+/, '') +
+      '/' +
+      lninp.substring(8, 10) +
+      '/' +
+      lninp.substring(3, 8) +
+      '-ИП';
+    return ip;
+  }
+
+  //===========================
   // Обработка поля ввода
-  function handleInputBox(evt) {
+  function handleInputBoxIP(evt) {
     document.getElementById('list').innerHTML = '';
     var ln = evt.target.value;
     var span = document.createElement('span');
     span.innerHTML = '<br>' + ln + ' -> ' + getUin(ln);
     document.getElementById('list').insertBefore(span, null);
+    document.getElementById('editboxUIN').value = getUin(ln);
+  }
+  function handleInputBoxUIN(evt) {
+    document.getElementById('list').innerHTML = '';
+    var ln = evt.target.value;
+    var span = document.createElement('span');
+    span.innerHTML = '<br>' + ln + ' -> ' + getIP(ln);
+    document.getElementById('list').insertBefore(span, null);
+    document.getElementById('editboxIP').value = getIP(ln);
   }
 
   //===========================
@@ -163,7 +191,10 @@
   // установка обработчиков событий
   document
     .getElementById('editboxIP')
-    .addEventListener('input', handleInputBox, false);
+    .addEventListener('input', handleInputBoxIP, false);
+  document
+    .getElementById('editboxUIN')
+    .addEventListener('input', handleInputBoxUIN, false);
   document
     .getElementById('files')
     .addEventListener('change', handleFileSelect, false);
