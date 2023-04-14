@@ -40,14 +40,18 @@
 </div>
 <div id="border">
   <p class="name">Укажите номер ИП, для которого необходимо получить УИН</p>
-  №ИП <input type="text" id="editboxIP" value="123456/06/24012-ИП" /> <> УИН
-  <input type="text" id="editboxUIN" value="32224012060123456005" />
+  <label for="editboxIP">№ИП: </label>
+  <input type="text" id="editboxIP" value="123456/06/24012-ИП" placeholder="n..n/yy/rr0dd-ИП" /> <> 
+  <label for="editboxUIN">УИН: </label>
+  <input type="tel" id="editboxUIN" value="32224012060123456005" placeholder="322....00 (20 цифр)" />
 </div>
 
-<p class="name">
-  Выберите файл с номерами ИП, для которых необходимо получить УИНы
-</p>
-<input type="file" id="files" name="files[]" multiple />
+<div id="border">
+  <p class="name">
+    Выберите файл с номерами ИП, для которых необходимо получить УИНы
+  </p>
+  <input type="file" id="files" name="files[]" multiple />
+</div>
 <p class="name">Вычисленный результат:</p>
 <output id="list"></output>
 
@@ -131,6 +135,28 @@
   }
 
   //===========================
+  // Покрасить УИН
+  function colorUINInputBox(textfield_id) { /*
+    let uin = document.getElementById(textfield_id).innerHTML;
+    let r1 = "<em style='color:red;'>";
+    let r0 = '</em';
+    document.getElementById(textfield_id).innerHTML =
+      '' +
+      uin.substring(0, 3) +
+      r1 +
+      uin.substring(3, 8) +
+      r0 +
+      uin.substring(8, 10) +
+      r1 +
+      uin.substring(10, 17) +
+      r0 +
+      uin.substring(17, 20) +
+      r1 +
+      uin.substring(20) +
+      r0; */
+  }
+
+  //===========================
   // Обработка поля ввода
   function handleInputBoxIP(evt) {
     document.getElementById('list').innerHTML = '';
@@ -139,6 +165,7 @@
     span.innerHTML = '<br>' + ln + ' -> ' + getUin(ln);
     document.getElementById('list').insertBefore(span, null);
     document.getElementById('editboxUIN').value = getUin(ln);
+    colorUINInputBox('editboxUIN');
   }
   function handleInputBoxUIN(evt) {
     document.getElementById('list').innerHTML = '';
@@ -147,6 +174,7 @@
     span.innerHTML = '<br>' + ln + ' -> ' + getIP(ln);
     document.getElementById('list').insertBefore(span, null);
     document.getElementById('editboxIP').value = getIP(ln);
+    colorUINInputBox('editboxUIN');
   }
 
   //===========================
